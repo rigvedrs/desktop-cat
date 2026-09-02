@@ -1,0 +1,120 @@
+BUILDING THE WINDOWS EXE FROM YOUR MAC
+======================================
+
+PyInstaller can't cross-compile: a Windows .exe has to be produced on
+Windows. You don't need a Windows machine though. GitHub will lend you one
+for a few minutes, for free, and hand you back the finished file.
+
+Ignore build.bat entirely -- that was for a Windows laptop. This replaces it.
+
+
+-----------------------------------------------------------------------
+PART 1 -- SEE THE CAT ON YOUR MAC FIRST (2 minutes, optional)
+-----------------------------------------------------------------------
+
+Worth doing before you build, so you're not waiting on a build to notice
+you want the eyes a shade different.
+
+    cd path/to/DesktopCat
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install PySide6
+    python3 cat.py
+
+The cat appears bottom-right. Drag it, hover to pet it, right-click for
+the menu. Everything works except reacting to your typing, because that
+uses a Windows-only key check -- so on the Mac the menu grows an extra
+item, "Preview typing animation", to show you the paws tapping.
+
+Quit via right-click > Quit. This is only a preview; the thing you ship is
+built in part 2.
+
+
+-----------------------------------------------------------------------
+PART 2 -- BUILD THE EXE
+-----------------------------------------------------------------------
+
+1. Make a new repository at github.com/new.
+
+   Public is easier: the download link at the end works for anyone, and
+   the build minutes are free and unlimited. Private also works, but then
+   only you can download, and Windows build minutes come out of your
+   monthly free allowance (about 100 builds' worth -- still plenty).
+
+2. Put these files in it, keeping the folder layout:
+
+       cat.py
+       cat.ico
+       splash.png
+       .github/workflows/build-windows.yml
+
+   The .github folder is hidden in Finder. Press Cmd+Shift+. to show it,
+   or just use the terminal. If you drag files into GitHub's web uploader
+   instead, it won't upload a hidden folder -- use git, or create the
+   workflow file through GitHub's "Add file > Create new file" box and
+   type the path .github/workflows/build-windows.yml into the filename.
+
+       git init
+       git add .
+       git commit -m "Desktop cat"
+       git branch -M main
+       git remote add origin https://github.com/YOU/desktop-cat.git
+       git push -u origin main
+
+3. On GitHub, open the Actions tab.
+   Click "Build Windows exe" on the left, then "Run workflow" on the right.
+
+4. Wait three to five minutes. Green tick means done.
+
+5. Scroll to the bottom of the finished run. Under "Artifacts" there's
+   DesktopCat-windows. Download it -- it's a zip containing DesktopCat.exe.
+
+That exe is the whole app. Send it to anyone with a Windows laptop.
+
+
+-----------------------------------------------------------------------
+OPTIONAL -- A LINK YOU CAN JUST SEND PEOPLE
+-----------------------------------------------------------------------
+
+Downloading from the Actions tab needs a GitHub login, which is no good
+for the people you're sending this to. Pushing a tag instead publishes the
+exe as a release, and release files download with no login at all (as long
+as the repo is public):
+
+    git tag v1.0
+    git push origin v1.0
+
+The same build runs, and a few minutes later github.com/YOU/desktop-cat/releases
+has a direct DesktopCat.exe link. Send that link plus the contents of
+SEND-THIS-WITH-THE-FILE.txt and you're done.
+
+For later versions, bump the tag: v1.1, v1.2, and so on.
+
+
+-----------------------------------------------------------------------
+IF YOU'D RATHER NOT USE GITHUB
+-----------------------------------------------------------------------
+
+Your other options, roughly in order of how painful they are:
+
+  * Any Windows PC for ten minutes -- copy the folder over, double-click
+    build.bat, take the exe. A friend's laptop, a library, an office
+    machine. Fastest if one is within reach.
+
+  * A cloud Windows box for an hour, then delete it.
+
+  * Windows in Parallels or UTM on the Mac. On Apple Silicon you get
+    Windows on ARM, so you'd need to install the x64 build of Python
+    inside it to produce an exe that runs on ordinary Windows laptops.
+    Fiddly, and worth it only if you'll rebuild often.
+
+  * Wine on macOS. Technically possible, reliably annoying on Apple
+    Silicon. Not recommended.
+
+
+-----------------------------------------------------------------------
+CHANGING THE CAT LATER
+-----------------------------------------------------------------------
+
+Edit cat.py, push, run the workflow again. The artwork all lives at the
+top of the file as plain SVG. You never touch a Windows machine.

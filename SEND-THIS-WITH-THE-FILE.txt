@@ -1,0 +1,62 @@
+YOUR DESKTOP CAT
+================
+
+Double-click DesktopCat.exe. A cat appears near the bottom-right of your
+screen and stays on top of whatever you're doing.
+
+There is nothing to install.
+
+
+THE FIRST TIME YOU OPEN IT
+--------------------------
+
+Two things may happen. Both are normal.
+
+  * A blue screen saying "Windows protected your PC".
+    Click "More info", then "Run anyway".
+    Windows says this about any program that isn't from a big company.
+
+  * A pause of five or ten seconds before anything appears.
+    A small "Desktop Cat" box shows up while it gets ready.
+    Please don't double-click again while you wait.
+
+
+PLAYING WITH IT
+---------------
+
+  Type anything            the cat taps its paws along with you
+  Move your mouse over it  it closes its eyes and hearts float up
+  Click it                 a quick pet
+  Drag it                  move it anywhere you like
+  Leave it alone a while   it falls asleep
+
+Right-click the cat for the menu. You can pick a different cat (there are
+four), switch the eyes between round and slim, change the size, and turn on
+"Start with Windows" so it's there every morning.
+
+If the cat is ever in your way, turn on "Click through" in that menu. It
+stays visible but your mouse goes straight past it.
+
+To close it: right-click the cat, then Quit.
+If you can't find the cat, click the small cat icon near your clock.
+
+
+IF IT WON'T OPEN AT ALL
+-----------------------
+
+Nothing happens when you double-click, or you get a message about only
+installing apps from the Microsoft Store:
+
+  Your laptop is in something called S mode. Lots of new laptops come
+  this way. Turning it off is free and takes a minute:
+
+     Settings  >  System  >  Activation  >  Switch to Windows 11 Home
+     (look for "Switch out of S mode" and click Open, then Get)
+
+  You only ever do this once. It doesn't cost anything and doesn't
+  remove any of your programs. Note that it can't be undone afterwards,
+  so if you'd rather not, that's completely fine -- just let me know.
+
+If your antivirus quarantines the file, it's being over-cautious about the
+way the app is packaged. You can tell it to allow the file, or again, just
+let me know.
