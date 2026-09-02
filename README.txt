@@ -121,8 +121,8 @@ CHANGING THE ART
 
 Everything the cat is made of lives at the top of cat.py as plain SVG on a
 120 x 132 canvas. The CATS list holds the four colour schemes; adding a
-fifth cat is one more entry in that list. The eyes are the two small
-functions _eye_round and _eye_slim.
+fifth cat is one more entry in that list. The eyes are drawn by the
+functions in EYE_PARTS (iris, pupil and catchlights for each style).
 
 Windows only. It leans on Windows for the always-on-top behaviour, the
 typing check and the tray icon.

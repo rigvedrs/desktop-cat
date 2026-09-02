@@ -54,3 +54,18 @@ def test_other_cats_keep_their_tail_colour(app):
         c = C.CAT_BY_ID[cid]
         assert c["tail"] == c["fur"]
         assert "tail_line" not in c
+
+
+def test_open_eye_is_three_layers(app):
+    for style in ("round", "slim"):
+        art = C.CatArt(C.CAT_BY_ID["nyx"], style)
+        art.rasterize(W, H, 1.0)
+        assert not hasattr(art, "eyes_open")
+        assert "eyes_open" not in C.CatArt.NAMES
+        for name in ("eyes_iris", "eyes_pupil", "eyes_gloss"):
+            assert has_ink(art.px[name]), f"{style}: empty {name}"
+        # the pupil layer is only the dark pupil, nothing else
+        pupil_colour = "#241F2C" if style == "round" else "#221F2A"
+        assert solid_colours(art.px["eyes_pupil"]) == {pupil_colour}
+        # the gloss layer is only white catchlights
+        assert solid_colours(art.px["eyes_gloss"]) <= {"#FFFFFF"}

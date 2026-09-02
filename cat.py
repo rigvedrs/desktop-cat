@@ -153,27 +153,61 @@ def layer_blush(c):
     )
 
 
-def _eye_round(x, c, d):
+# Each eye is three layers so the pupil can slide on its own: iris (static),
+# pupil (moves with the cursor), gloss (catchlights, pinned to the eye).
+# All six take (x, c, d): eye centre x, the cat, and d = +1 left / -1 right.
+
+def _iris_round(x, c, d):
     return (
         f'<ellipse cx="{x}" cy="50" rx="6.6" ry="7.2" fill="{c["eye"]}" '
         f'stroke="{c["line"]}" stroke-width="1.2"/>'
-        f'<ellipse cx="{x + 0.5 * d}" cy="50.6" rx="3.7" ry="4.4" fill="#241F2C"/>'
+    )
+
+
+def _pupil_round(x, c, d):
+    return f'<ellipse cx="{x + 0.5 * d}" cy="50.6" rx="3.7" ry="4.4" fill="#241F2C"/>'
+
+
+def _gloss_round(x, c, d):
+    return (
         f'<circle cx="{x - 1.8}" cy="47.6" r="2.1" fill="#ffffff"/>'
         f'<circle cx="{x + 2.4}" cy="52.8" r="0.9" fill="#ffffff" opacity="0.75"/>'
     )
 
 
-def _eye_slim(x, c, d):
-    return (
-        f'<ellipse cx="{x}" cy="49" rx="6.2" ry="7.8" fill="{c["eye"]}"/>'
-        f'<ellipse cx="{x}" cy="49" rx="2.7" ry="6.4" fill="#221F2A"/>'
-        f'<circle cx="{x + 2.4}" cy="45.6" r="1.9" fill="#ffffff"/>'
-    )
+def _iris_slim(x, c, d):
+    return f'<ellipse cx="{x}" cy="49" rx="6.2" ry="7.8" fill="{c["eye"]}"/>'
 
 
-def layer_eyes_open(c, style):
-    fn = _eye_slim if style == "slim" else _eye_round
+def _pupil_slim(x, c, d):
+    return f'<ellipse cx="{x}" cy="49" rx="2.7" ry="6.4" fill="#221F2A"/>'
+
+
+def _gloss_slim(x, c, d):
+    return f'<circle cx="{x + 2.4}" cy="45.6" r="1.9" fill="#ffffff"/>'
+
+
+EYE_PARTS = {
+    "round": (_iris_round, _pupil_round, _gloss_round),
+    "slim": (_iris_slim, _pupil_slim, _gloss_slim),
+}
+
+
+def _eye_layer(c, style, part):
+    fn = EYE_PARTS["slim" if style == "slim" else "round"][part]
     return _svg(fn(46, c, 1) + fn(74, c, -1))
+
+
+def layer_eyes_iris(c, style):
+    return _eye_layer(c, style, 0)
+
+
+def layer_eyes_pupil(c, style):
+    return _eye_layer(c, style, 1)
+
+
+def layer_eyes_gloss(c, style):
+    return _eye_layer(c, style, 2)
 
 
 def layer_eyes_shut(c):
@@ -203,7 +237,7 @@ class CatArt:
     """The SVG layers for one cat, plus bitmaps cached at the display size."""
 
     NAMES = ("tail", "base", "marks", "face", "blush",
-             "eyes_open", "eyes_shut", "paw_l", "paw_r")
+             "eyes_iris", "eyes_pupil", "eyes_gloss", "eyes_shut", "paw_l", "paw_r")
 
     def __init__(self, cat, eye_style):
         self.cat = cat
@@ -212,7 +246,9 @@ class CatArt:
         self.marks = make_renderer(layer_marks(cat))
         self.face = make_renderer(layer_face(cat))
         self.blush = make_renderer(layer_blush(cat))
-        self.eyes_open = make_renderer(layer_eyes_open(cat, eye_style))
+        self.eyes_iris = make_renderer(layer_eyes_iris(cat, eye_style))
+        self.eyes_pupil = make_renderer(layer_eyes_pupil(cat, eye_style))
+        self.eyes_gloss = make_renderer(layer_eyes_gloss(cat, eye_style))
         self.eyes_shut = make_renderer(layer_eyes_shut(cat))
         self.paw_l = make_renderer(layer_paw(cat, 35))
         self.paw_r = make_renderer(layer_paw(cat, 64))
@@ -635,7 +671,8 @@ class Cat(QWidget):
             p.setClipPath(self.scaled_silhouette(r))
             self.art.marks.render(p, r)
             p.restore()
-        for lay in (self.art.face, self.art.eyes_open, self.art.paw_l, self.art.paw_r):
+        for lay in (self.art.face, self.art.eyes_iris, self.art.eyes_pupil,
+                    self.art.eyes_gloss, self.art.paw_l, self.art.paw_r):
             if lay:
                 lay.render(p, r)
         p.end()
@@ -883,7 +920,12 @@ class Cat(QWidget):
 
         # eyes
         shut = (st in ("pet", "sleep")) or (self.t < self.blink_until)
-        p.drawPixmap(top, px["eyes_shut" if shut else "eyes_open"])
+        if shut:
+            p.drawPixmap(top, px["eyes_shut"])
+        else:
+            p.drawPixmap(top, px["eyes_iris"])
+            p.drawPixmap(top, px["eyes_pupil"])
+            p.drawPixmap(top, px["eyes_gloss"])
 
         # paws -- they tap while you type
         lift_l = lift_r = 0.0
