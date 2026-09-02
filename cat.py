@@ -44,8 +44,8 @@ TAIL = "M92 112 C117 110 115 78 100 66"
 
 CATS = [
     {
-        "id": "mochi",
-        "name": "Mochi",
+        "id": "nyx",
+        "name": "Nyx",
         "fur": "#F6F3EC", "belly": "#FFFFFF", "tail": "#F6F3EC",
         "line": "#4A4550", "ear": "#F0C3BE", "eye": "#EFC44B",
         "marks": (
@@ -55,8 +55,8 @@ CATS = [
         ),
     },
     {
-        "id": "patches",
-        "name": "Patches",
+        "id": "nora",
+        "name": "Nora",
         "fur": "#F7F4EE", "belly": "#FFFFFF", "tail": "#E8913C",
         "line": "#4A4550", "ear": "#F0C3BE", "eye": "#57996A",
         "marks": (
@@ -72,8 +72,8 @@ CATS = [
         ),
     },
     {
-        "id": "marmalade",
-        "name": "Marmalade",
+        "id": "nemo",
+        "name": "Nemo",
         "fur": "#F2A03D", "belly": "#FDEBD2", "tail": "#F2A03D",
         "line": "#8C4E17", "ear": "#EFB1A6", "eye": "#9A6430",
         "marks": (
@@ -94,6 +94,9 @@ CATS = [
 ]
 
 CAT_BY_ID = {c["id"]: c for c in CATS}
+
+# Ids the cats had before they were renamed; old settings files still use them.
+LEGACY_CAT_IDS = {"mochi": "nyx", "patches": "nora", "marmalade": "nemo"}
 
 EYE_STYLES = [("round", "Round pupils"), ("slim", "Slim pupils")]
 
@@ -301,7 +304,7 @@ def heart_path(cx, cy, s):
 SIZES = [("Small", 1.2), ("Medium", 1.6), ("Large", 2.2)]
 
 DEFAULTS = {
-    "cat": "mochi",
+    "cat": "nyx",
     "eyes": "round",
     "scale": 1.6,
     "x": None,
@@ -326,6 +329,7 @@ def load_settings():
             s.update(json.load(f))
     except Exception:
         pass
+    s["cat"] = LEGACY_CAT_IDS.get(s.get("cat"), s.get("cat"))
     if s.get("cat") not in CAT_BY_ID:
         s["cat"] = DEFAULTS["cat"]
     if s.get("eyes") not in ("round", "slim"):

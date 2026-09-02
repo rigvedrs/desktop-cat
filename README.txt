@@ -43,7 +43,7 @@ Double-click DesktopCat.exe. The cat appears near the bottom-right.
   Right-click it       menu: cat, eyes, size, and so on
   Tray icon            same menu, and click it to fetch the cat back
 
-The menu has four cats (Mochi, Patches, Marmalade, Noir), two eye styles
+The menu has four cats (Nyx, Nora, Nemo, Noir), two eye styles
 (round pupils or slim pupils), three sizes, "Start with Windows", and
 "Click through" for when the cat is in the way but you want it visible.
 
