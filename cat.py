@@ -46,7 +46,7 @@ CATS = [
     {
         "id": "nyx",
         "name": "Nyx",
-        "fur": "#F6F3EC", "belly": "#FFFFFF", "tail": "#F6F3EC",
+        "fur": "#F6F3EC", "belly": "#FFFFFF", "tail": "#2E2A33", "tail_line": "#6E6880",
         "line": "#4A4550", "ear": "#F0C3BE", "eye": "#EFC44B",
         "marks": (
             '<ellipse cx="47" cy="24" rx="15" ry="10.5" '
@@ -57,7 +57,7 @@ CATS = [
     {
         "id": "nora",
         "name": "Nora",
-        "fur": "#F7F4EE", "belly": "#FFFFFF", "tail": "#E8913C",
+        "fur": "#F7F4EE", "belly": "#FFFFFF", "tail": "#332F38", "tail_line": "#6E6880",
         "line": "#4A4550", "ear": "#F0C3BE", "eye": "#57996A",
         "marks": (
             '<path d="M63 4 L98 2 L102 42 Q82 44 68 26 Z" fill="#E8913C"/>'
@@ -107,8 +107,10 @@ def _svg(inner):
 
 
 def layer_tail(c):
+    # A dark tail gets a lighter rim (tail_line) so it still reads as a shape.
+    rim = c.get("tail_line", c["line"])
     return _svg(
-        f'<path d="{TAIL}" fill="none" stroke="{c["line"]}" stroke-width="13.6" '
+        f'<path d="{TAIL}" fill="none" stroke="{rim}" stroke-width="13.6" '
         f'stroke-linecap="round"/>'
         f'<path d="{TAIL}" fill="none" stroke="{c["tail"]}" stroke-width="11" '
         f'stroke-linecap="round"/>'
