@@ -4,3 +4,5 @@ build/
 dist/
 *.spec
 .DS_Store
+.claude/worktrees/
+.superpowers/
