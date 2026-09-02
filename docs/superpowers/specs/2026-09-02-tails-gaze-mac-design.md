@@ -110,9 +110,11 @@ three eye layers at neutral.
 
 ### 2.2 Gaze computation
 
-Runs in `tick()` every frame, only when the eyes will be open
-(`state()` not in `("pet", "sleep")` and not mid-blink) and the `gaze`
-setting is on; otherwise the target is `(0, 0)`.
+Runs in `tick()` every frame. The target is `(0, 0)` while `state()` is
+`"pet"` or `"sleep"` (eyes shut for a long stretch, so they re-centre and
+then look at the cursor on waking) or while the `gaze` setting is off.
+Blinks do **not** reset the target — a 130 ms blink must not make the
+pupils twitch toward centre and back.
 
 ```
 GAZE_MAX = {"round": (2.9, 2.8), "slim": (3.5, 1.4)}   # canvas units
@@ -131,9 +133,11 @@ else:
 gaze += (target - gaze) * min(1.0, dt * 9.0)          # ~110 ms ease
 ```
 
-Both pupils receive the same offset. `GAZE_MAX` values are the largest
-offsets at which the pupil ellipse still lies fully inside the iris ellipse
-(approved: "stays inside iris").
+Both pupils receive the same offset. `GAZE_MAX` is sized so the pupil
+stays inside the iris (approved: "stays inside iris"); the round style's
+pupil sits 0.6 units below the iris centre, so at full downward travel it
+overshoots the rim by ~0.6 canvas units (≈1 px at Medium), which the
+approved mock already showed.
 
 The cursor is read with `QCursor.pos()` — cross-platform, no extra API, no
 permission.
@@ -148,8 +152,8 @@ When `shut` is true, `eyes_shut` is drawn instead of all three, as today.
 
 - Mouse movement does **not** count as activity. `last_active` is still
   updated only by typing and petting, so the cat naps after 90 s as before.
-- Tracking has no effect while eyes are shut (pet, sleep, blink); no extra
-  state.
+- While eyes are shut (pet, sleep, blink) the pupil layer is not drawn, so
+  the offset is invisible; no extra state.
 - New setting `"gaze": True` in `DEFAULTS`, persisted like the others. New
   checkable action **"Follow the cursor"** at the bottom of the Eyes
   submenu. When off, the pupil offset eases back to neutral.
