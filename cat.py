@@ -10,9 +10,11 @@ import os
 import json
 import math
 import random
+import shutil
 import time
 
 IS_WIN = sys.platform.startswith("win")
+IS_MAC = sys.platform == "darwin"
 
 from PySide6.QtCore import Qt, QTimer, QRectF, QPointF, QByteArray, QPoint
 from PySide6.QtGui import (
@@ -22,12 +24,31 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import QApplication, QWidget, QMenu, QSystemTrayIcon
 from PySide6.QtSvg import QSvgRenderer
 
+_user32 = None   # Windows: user32.dll
+_cg = None       # macOS: ApplicationServices (CoreGraphics event timing)
+_objc = None     # macOS: the Objective-C runtime, for one NSWindow tweak
+
 if IS_WIN:
     import ctypes
     import winreg
     _user32 = ctypes.windll.user32
-else:
-    _user32 = None
+
+if IS_MAC:
+    import ctypes
+    import ctypes.util
+    import fcntl
+    try:
+        _cg = ctypes.cdll.LoadLibrary(ctypes.util.find_library("ApplicationServices"))
+        _cg.CGEventSourceSecondsSinceLastEventType.restype = ctypes.c_double
+        _cg.CGEventSourceSecondsSinceLastEventType.argtypes = [ctypes.c_uint32, ctypes.c_uint32]
+    except Exception:
+        _cg = None
+    try:
+        _objc = ctypes.cdll.LoadLibrary(ctypes.util.find_library("objc"))
+        _objc.sel_registerName.restype = ctypes.c_void_p
+        _objc.sel_registerName.argtypes = [ctypes.c_char_p]
+    except Exception:
+        _objc = None
 
 
 # --------------------------------------------------------------------------
@@ -371,11 +392,29 @@ DEFAULTS = {
 }
 
 
+def settings_dir():
+    if IS_WIN:
+        base = os.environ.get("APPDATA") or os.path.expanduser("~")
+        return os.path.join(base, "DesktopCat")
+    if IS_MAC:
+        return os.path.expanduser("~/Library/Application Support/DesktopCat")
+    return os.path.expanduser("~/.config/DesktopCat")
+
+
+# Where non-Windows builds kept their settings before 2026-09.
+LEGACY_SETTINGS = os.path.join(os.path.expanduser("~"), "DesktopCat", "settings.json")
+
+
 def settings_path():
-    base = os.environ.get("APPDATA") or os.path.expanduser("~")
-    folder = os.path.join(base, "DesktopCat")
+    folder = settings_dir()
     os.makedirs(folder, exist_ok=True)
-    return os.path.join(folder, "settings.json")
+    path = os.path.join(folder, "settings.json")
+    if not IS_WIN and not os.path.exists(path) and os.path.exists(LEGACY_SETTINGS):
+        try:
+            shutil.copyfile(LEGACY_SETTINGS, path)   # copy, never move
+        except Exception:
+            pass
+    return path
 
 
 def load_settings():
@@ -440,7 +479,7 @@ def set_autostart(on):
 
 
 # --------------------------------------------------------------------------
-# Global typing detection (Windows)
+# Global typing detection (Windows and macOS)
 # --------------------------------------------------------------------------
 # Polls whether any typing key has been pressed since the last check.
 # It never records which key, and nothing is stored or sent anywhere.
@@ -458,23 +497,83 @@ _mutex_handle = None
 def single_instance_guard():
     """Stop a second cat appearing when an impatient user double-clicks twice."""
     global _mutex_handle
-    if not IS_WIN:
+    if IS_WIN:
+        try:
+            k32 = ctypes.windll.kernel32
+            _mutex_handle = k32.CreateMutexW(None, False, "DesktopCat_SingleInstance")
+            return k32.GetLastError() != 183  # ERROR_ALREADY_EXISTS
+        except Exception:
+            return True
+    if IS_MAC:
+        try:
+            folder = settings_dir()
+            os.makedirs(folder, exist_ok=True)
+            f = open(os.path.join(folder, "instance.lock"), "w")
+        except Exception:
+            return True   # can't lock; better a possible second cat than none
+        try:
+            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            f.close()
+            return False
+        _mutex_handle = f   # held until the process exits
         return True
+    return True
+
+
+def mac_seconds_since_keydown():
+    """Seconds since any key went down, system-wide. Like the Windows check
+    this only learns *that* a key was pressed, never which one, and needs no
+    Accessibility or Input Monitoring permission."""
+    if _cg is None:
+        return 1e9
     try:
-        k32 = ctypes.windll.kernel32
-        _mutex_handle = k32.CreateMutexW(None, False, "DesktopCat_SingleInstance")
-        return k32.GetLastError() != 183  # ERROR_ALREADY_EXISTS
+        # kCGEventSourceStateHIDSystemState = 1, kCGEventKeyDown = 10
+        return float(_cg.CGEventSourceSecondsSinceLastEventType(1, 10))
     except Exception:
-        return True
+        return 1e9
 
 
 def any_key_pressed():
-    if not IS_WIN:
+    if IS_WIN:
+        for vk in VK_CODES:
+            if _user32.GetAsyncKeyState(vk) & 0x0001:
+                return True
         return False
-    for vk in VK_CODES:
-        if _user32.GetAsyncKeyState(vk) & 0x0001:
-            return True
+    if IS_MAC:
+        return mac_seconds_since_keydown() < 0.20   # polled every 60 ms
     return False
+
+
+if IS_MAC:
+    def _objc_msg(receiver, selector, *args, restype=ctypes.c_void_p, argtypes=()):
+        proto = ctypes.CFUNCTYPE(restype, ctypes.c_void_p, ctypes.c_void_p, *argtypes)
+        send = ctypes.cast(_objc.objc_msgSend, proto)
+        return send(receiver, _objc.sel_registerName(selector.encode()), *args)
+
+    def apply_mac_window_behaviour(widget):
+        """Keep the cat on every desktop (Space) and out of Mission Control's way.
+
+        Qt gives a tool window 'move to active space'; a pet should simply be
+        on all of them. Best effort: any failure leaves the default behaviour.
+        """
+        if _objc is None or QApplication.platformName() != "cocoa":
+            return None
+        try:
+            view = int(widget.winId())            # an NSView* on cocoa
+            win = _objc_msg(view, "window")
+            if not win:
+                return None
+            # NSWindowCollectionBehaviorCanJoinAllSpaces | Stationary | FullScreenAuxiliary
+            flags = (1 << 0) | (1 << 4) | (1 << 8)
+            _objc_msg(win, "setCollectionBehavior:", flags,
+                      restype=None, argtypes=(ctypes.c_ulong,))
+        except Exception:
+            pass
+        return None
+else:
+    def apply_mac_window_behaviour(widget):
+        return None
 
 
 # --------------------------------------------------------------------------
@@ -534,6 +633,7 @@ class Cat(QWidget):
         self.top_timer.start(4000)
 
         self.show()
+        apply_mac_window_behaviour(self)
 
     # ---- setup -----------------------------------------------------------
 
@@ -641,7 +741,7 @@ class Cat(QWidget):
 
         m.addSeparator()
 
-        if not IS_WIN:
+        if not IS_WIN and not IS_MAC:
             a_demo = QAction("Preview typing animation", m)
             a_demo.triggered.connect(self.demo_typing)
             m.addAction(a_demo)
@@ -749,6 +849,7 @@ class Cat(QWidget):
             flags |= Qt.WindowStaysOnTopHint
         self.setWindowFlags(flags)
         self.show()
+        apply_mac_window_behaviour(self)
         save_settings(self.s)
         self.refresh_tray()
 
