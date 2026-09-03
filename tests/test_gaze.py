@@ -68,6 +68,14 @@ def test_pupils_move_in_the_painted_cat(cat_widget):
     assert a == a2          # nothing else is animating between grabs
     assert a != b           # ...so the only difference is the pupils
 
+    # The catchlight is pinned to the eye: the pixel at its centre is white in
+    # both frames even though the pupil underneath it moved.
+    sc = float(cat_widget.s["scale"])
+    gx = int(cat_widget.MARGIN_SIDE + (46 - 1.8) * sc)
+    gy = int(cat_widget.MARGIN_TOP + 47.6 * sc)
+    assert a.pixelColor(gx, gy) == b.pixelColor(gx, gy)
+    assert a.pixelColor(gx, gy).lightness() > 240
+
 
 def test_menu_has_follow_cursor_toggle(cat_widget):
     menu = cat_widget.build_menu()

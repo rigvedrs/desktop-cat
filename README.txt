@@ -43,9 +43,9 @@ Double-click DesktopCat.exe. The cat appears near the bottom-right.
   Right-click it       menu: cat, eyes, size, and so on
   Tray icon            same menu, and click it to fetch the cat back
 
-The menu has four cats (Nyx, Nora, Nemo, Noir), two eye styles
-(round pupils or slim pupils), three sizes, "Start with Windows", and
-"Click through" for when the cat is in the way but you want it visible.
+The menu has four cats (Nyx, Nora, Nemo, Noir), two eye styles (round pupils
+or slim pupils) plus "Follow the cursor", three sizes, "Start with Windows",
+and "Click through" for when the cat is in the way but you want it visible.
 
 Settings and position are remembered in:
     %APPDATA%\DesktopCat\settings.json
@@ -119,7 +119,9 @@ Sixteen times a second the app asks the operating system one question:
 "how long since the last key went down?" (on the Mac). It gets back a yes
 or no, or a number of seconds. It never learns which key, never stores
 anything, and never sends anything anywhere. The only thing it does with
-the answer is lift a paw. On the Mac this needs no Accessibility or Input
+the answer is lift a paw. One small difference: on the Mac any key counts,
+arrows and function keys included, so the paws also tap while you move
+around a document. On the Mac this needs no Accessibility or Input
 Monitoring permission.
 
 This is worth being able to explain, because "app that reacts to your
@@ -135,7 +137,7 @@ Everything the cat is made of lives at the top of cat.py as plain SVG on a
 fifth cat is one more entry in that list. The eyes are drawn by the
 functions in EYE_PARTS (iris, pupil and catchlights for each style).
 
-Windows and macOS. Always-on-top, the typing check, the tray icon and the
+Windows and macOS. Always-on-top, the typing check, the menu and the
 single-instance guard each have a small platform-specific branch in cat.py;
 everything else is shared. After changing the art, run
     python tools/make_icons.py

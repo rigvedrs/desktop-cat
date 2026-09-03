@@ -869,7 +869,7 @@ class Cat(QWidget):
         self.raise_()
 
     def demo_typing(self):
-        """Off Windows there is no key hook, so this fakes it for previewing."""
+        """On Linux there is no key hook, so this fakes it for previewing."""
         self.typing_until = self.t + 5.0
         self.last_active = time.monotonic()
 

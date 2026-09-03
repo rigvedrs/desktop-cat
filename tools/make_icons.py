@@ -8,6 +8,7 @@ Needs Pillow for the .ico; the app itself does not.
 """
 
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -117,6 +118,8 @@ def write_splash(path, art):
 
 
 def main():
+    if shutil.which("iconutil") is None:
+        sys.exit("iconutil not found: run this on macOS (it ships with the OS).")
     art = C.CatArt(C.CAT_BY_ID[ICON_CAT], "round")
     for name, fn in (("cat.ico", write_ico), ("cat.icns", write_icns),
                      ("splash.png", write_splash)):

@@ -137,7 +137,9 @@ Both pupils receive the same offset. `GAZE_MAX` is sized so the pupil
 stays inside the iris (approved: "stays inside iris"); the round style's
 pupil sits 0.6 units below the iris centre, so at full downward travel it
 overshoots the rim by ~0.6 canvas units (≈1 px at Medium), which the
-approved mock already showed.
+approved mock already showed. The slim style is exact on the axes but
+overshoots by up to ~0.4 units on diagonals; both are well under a pixel
+at Medium.
 
 The cursor is read with `QCursor.pos()` — cross-platform, no extra API, no
 permission.

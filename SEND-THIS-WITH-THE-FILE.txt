@@ -25,14 +25,16 @@ PLAYING WITH IT
 ---------------
 
   Type anything            the cat taps its paws along with you
+  Move your mouse around   its eyes follow the cursor
   Move your mouse over it  it closes its eyes and hearts float up
   Click it                 a quick pet
   Drag it                  move it anywhere you like
   Leave it alone a while   it falls asleep
 
 Right-click the cat for the menu. You can pick a different cat (there are
-four), switch the eyes between round and slim, change the size, and turn on
-"Start with Windows" so it's there every morning.
+four), switch the eyes between round and slim, change the size, turn the
+cursor-following off if it's staring at you, and turn on "Start with
+Windows" so it's there every morning.
 
 If the cat is ever in your way, turn on "Click through" in that menu. It
 stays visible but your mouse goes straight past it.

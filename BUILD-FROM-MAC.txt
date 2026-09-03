@@ -32,7 +32,7 @@ Quit via right-click > Quit. Settings live in
 
 
 -----------------------------------------------------------------------
-PART 2 -- BUILD THE EXE
+PART 2 -- BUILD THE EXE AND THE MAC APP
 -----------------------------------------------------------------------
 
 1. Make a new repository at github.com/new.
@@ -55,7 +55,8 @@ PART 2 -- BUILD THE EXE
    or just use the terminal. If you drag files into GitHub's web uploader
    instead, it won't upload a hidden folder -- use git, or create the
    workflow file through GitHub's "Add file > Create new file" box and
-   type the path .github/workflows/build-windows.yml into the filename.
+   type the path .github/workflows/build-windows.yml (and again for
+   build-macos.yml) into the filename.
 
        git init
        git add .
@@ -74,17 +75,18 @@ PART 2 -- BUILD THE EXE
    DesktopCat-windows (a zip containing DesktopCat.exe) and, on the other
    run, DesktopCat-macos (a zip containing DesktopCat-macos.dmg).
 
-That exe is the whole app. Send it to anyone with a Windows laptop.
+The exe is the whole Windows app; the dmg is the whole Mac app.
+Send them to anyone.
 
 
 -----------------------------------------------------------------------
 OPTIONAL -- A LINK YOU CAN JUST SEND PEOPLE
 -----------------------------------------------------------------------
 
-Downloading from the Actions tab needs a GitHub login, which is no good
-for the people you're sending this to. Pushing a tag instead publishes the
-exe as a release, and release files download with no login at all (as long
-as the repo is public):
+Downloading from the Actions tab needs a GitHub login, which is no good for
+the people you're sending this to. Pushing a tag instead publishes the exe
+and the dmg as a release, and release files download with no login at all
+(as long as the repo is public):
 
     git tag v1.0
     git push origin v1.0
