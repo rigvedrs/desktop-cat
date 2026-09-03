@@ -17,7 +17,7 @@ IS_WIN = sys.platform.startswith("win")
 from PySide6.QtCore import Qt, QTimer, QRectF, QPointF, QByteArray, QPoint
 from PySide6.QtGui import (
     QPainter, QColor, QPainterPath, QAction, QActionGroup, QIcon, QPixmap,
-    QImage, QFont, QTransform,
+    QImage, QFont, QTransform, QCursor,
 )
 from PySide6.QtWidgets import QApplication, QWidget, QMenu, QSystemTrayIcon
 from PySide6.QtSvg import QSvgRenderer
@@ -339,11 +339,29 @@ def heart_path(cx, cy, s):
 # Settings
 # --------------------------------------------------------------------------
 
+# How far the pupil may slide (canvas units) while staying inside the iris,
+# per eye style, and how far away (px, times the cat's scale) the cursor has
+# to be for the eyes to swing all the way over.
+GAZE_MAX = {"round": (2.9, 2.8), "slim": (3.5, 1.4)}
+GAZE_RANGE_PX = 220.0
+
+
+def gaze_target(dx, dy, scale, eye_style):
+    """Pupil offset for a cursor dx, dy pixels from the point between the eyes."""
+    dist = math.hypot(dx, dy)
+    if dist < 1.0:
+        return 0.0, 0.0
+    ramp = min(1.0, dist / (GAZE_RANGE_PX * scale))
+    mx, my = GAZE_MAX["slim" if eye_style == "slim" else "round"]
+    return dx / dist * ramp * mx, dy / dist * ramp * my
+
+
 SIZES = [("Small", 1.2), ("Medium", 1.6), ("Large", 2.2)]
 
 DEFAULTS = {
     "cat": "nyx",
     "eyes": "round",
+    "gaze": True,
     "scale": 1.6,
     "x": None,
     "y": None,
@@ -483,6 +501,7 @@ class Cat(QWidget):
         self.pet_travel_at = 0.0
         self.drag_from = None
         self.drag_dist = 0.0
+        self.gaze = [0.0, 0.0]   # eased pupil offset, canvas units
 
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
@@ -585,6 +604,12 @@ class Cat(QWidget):
             a.triggered.connect(lambda _=False, k=key: self.set_eyes(k))
             g2.addAction(a)
             eye_menu.addAction(a)
+
+        eye_menu.addSeparator()
+        a_gaze = QAction("Follow the cursor", eye_menu, checkable=True)
+        a_gaze.setChecked(bool(self.s.get("gaze", True)))
+        a_gaze.triggered.connect(self.set_gaze)
+        eye_menu.addAction(a_gaze)
 
         size_menu = m.addMenu("Size")
         g3 = QActionGroup(size_menu)
@@ -698,6 +723,11 @@ class Cat(QWidget):
         save_settings(self.s)
         self.update()
 
+    def set_gaze(self, on):
+        self.s["gaze"] = bool(on)
+        save_settings(self.s)
+        self.refresh_tray()
+
     def set_scale(self, val):
         g = self.geometry()
         anchor_x = g.x() + g.width() // 2
@@ -767,6 +797,25 @@ class Cat(QWidget):
     def over_cat(self, pos):
         return self.cat_rect().contains(QPointF(pos))
 
+    def gaze_anchor(self):
+        """Global pixel position of the point between the eyes."""
+        sc = float(self.s["scale"])
+        rect = self.cat_rect()
+        origin = self.mapToGlobal(QPoint(0, 0))
+        return origin.x() + rect.x() + 60.0 * sc, origin.y() + rect.y() + 50.0 * sc
+
+    def gaze_goal(self, cursor=None):
+        """Where the pupils want to be. Zero while the eyes are shut for a while
+        (petting, sleeping) so they re-centre and then look at the cursor on
+        waking. Blinks deliberately don't reset it."""
+        if not self.s.get("gaze", True) or self.state() in ("pet", "sleep"):
+            return 0.0, 0.0
+        if cursor is None:
+            cursor = QCursor.pos()
+        ax, ay = self.gaze_anchor()
+        return gaze_target(cursor.x() - ax, cursor.y() - ay,
+                           float(self.s["scale"]), self.s["eyes"])
+
     def pet(self, strength=1):
         self.pet_until = self.t + 1.6
         self.last_active = time.monotonic()
@@ -833,6 +882,13 @@ class Cat(QWidget):
             self.blink_at = self.t + 3.5 + random.random() * 3.5
 
         dt = self._interval / 1000.0
+
+        # Pupils drift toward the cursor rather than snapping (~110 ms).
+        tx, ty = self.gaze_goal()
+        k = min(1.0, dt * 9.0)
+        self.gaze[0] += (tx - self.gaze[0]) * k
+        self.gaze[1] += (ty - self.gaze[1]) * k
+
         alive = []
         for h in self.hearts:
             h["life"] += dt
@@ -924,7 +980,10 @@ class Cat(QWidget):
             p.drawPixmap(top, px["eyes_shut"])
         else:
             p.drawPixmap(top, px["eyes_iris"])
+            p.save()
+            p.translate(self.gaze[0] * sc, self.gaze[1] * sc)
             p.drawPixmap(top, px["eyes_pupil"])
+            p.restore()
             p.drawPixmap(top, px["eyes_gloss"])
 
         # paws -- they tap while you type
