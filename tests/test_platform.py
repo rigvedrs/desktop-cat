@@ -70,6 +70,10 @@ def test_single_instance_lock(monkeypatch, tmp_path):
 
 @pytest.mark.skipif(not C.IS_MAC, reason="macOS API")
 def test_mac_keydown_probe():
+    # Without this, a failed ApplicationServices load leaves _cg None, the probe
+    # returns 1e9 and typing detection is silently dead -- while both assertions
+    # below still pass.
+    assert C._cg is not None
     assert C.mac_seconds_since_keydown() >= 0.0
     assert C.any_key_pressed() in (True, False)
 
