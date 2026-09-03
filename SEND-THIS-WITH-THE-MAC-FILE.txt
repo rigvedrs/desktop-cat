@@ -1,0 +1,55 @@
+YOUR DESKTOP CAT (MAC)
+======================
+
+Open DesktopCat-macos.dmg and drag "Desktop Cat" onto the Applications
+folder next to it. Then open Desktop Cat from Applications (or Launchpad).
+
+A cat appears near the bottom-right of your screen and stays on top of
+whatever you're doing. It's on every desktop, so it follows you around.
+
+There is nothing else to install. It needs a Mac with an Apple chip
+(M1 or newer, 2020 onwards).
+
+
+THE FIRST TIME YOU OPEN IT
+--------------------------
+
+macOS will say something like "Desktop Cat" Not Opened -- Apple could not
+verify it is free of malware. That's what macOS says about any app that
+isn't from the App Store. Click Done, then:
+
+   System Settings  >  Privacy & Security
+   scroll down to the Security section
+   next to "Desktop Cat was blocked", click  Open Anyway
+   confirm with your password or Touch ID
+
+You only ever do this once.
+
+If instead macOS says the app is "damaged and can't be opened", open the
+Terminal app (Cmd+Space, type Terminal), paste this line and press Return:
+
+   xattr -dr com.apple.quarantine "/Applications/Desktop Cat.app"
+
+Then open Desktop Cat again.
+
+
+PLAYING WITH IT
+---------------
+
+  Type anything            the cat taps its paws along with you
+  Move your mouse around   its eyes follow the cursor
+  Move your mouse over it  it closes its eyes and hearts float up
+  Click it                 a quick pet
+  Drag it                  move it anywhere you like
+  Leave it alone a while   it falls asleep
+
+Right-click the cat for the menu. You can pick a different cat (there are
+four), switch the eyes between round and slim, change the size, and turn
+the cursor-following off if it's staring at you.
+
+If the cat is ever in your way, turn on "Click through" in that menu. It
+stays visible but your mouse goes straight past it.
+
+To close it: right-click the cat, then Quit.
+If you can't find the cat, click the small cat icon at the top-right of
+the screen, near the clock.

@@ -54,6 +54,14 @@ To close it: right-click the cat, then Quit.
 Opening it twice does nothing -- the second copy exits, so nobody ends up
 with two cats.
 
+ON A MAC it's the same cat from DesktopCat-macos.dmg: drag it into
+Applications, get past the one-time "Open Anyway" step (the steps are in
+SEND-THIS-WITH-THE-MAC-FILE.txt), and it lives in the menu bar instead of
+the tray. It shows on every desktop/Space. Settings are in:
+    ~/Library/Application Support/DesktopCat/settings.json
+Apple Silicon only; the app is unsigned, which is why the first-launch
+dance exists. Forward SEND-THIS-WITH-THE-MAC-FILE.txt with the dmg.
+
 
 -----------------------------------------------------------------------
 WHAT A RECIPIENT ACTUALLY NEEDS
@@ -106,10 +114,13 @@ above, written for the person receiving it. Forward it with the exe.
 HOW THE TYPING DETECTION WORKS
 -----------------------------------------------------------------------
 
-Sixteen times a second the app asks Windows one question: "has any typing
-key been pressed since I last asked?" It gets back yes or no. It never
-learns which key, never stores anything, and never sends anything anywhere.
-The only thing it does with the answer is lift a paw.
+Sixteen times a second the app asks the operating system one question:
+"has any typing key been pressed since I last asked?" (on Windows) or
+"how long since the last key went down?" (on the Mac). It gets back a yes
+or no, or a number of seconds. It never learns which key, never stores
+anything, and never sends anything anywhere. The only thing it does with
+the answer is lift a paw. On the Mac this needs no Accessibility or Input
+Monitoring permission.
 
 This is worth being able to explain, because "app that reacts to your
 typing" sounds worse than it is, and someone will ask.
@@ -124,5 +135,8 @@ Everything the cat is made of lives at the top of cat.py as plain SVG on a
 fifth cat is one more entry in that list. The eyes are drawn by the
 functions in EYE_PARTS (iris, pupil and catchlights for each style).
 
-Windows only. It leans on Windows for the always-on-top behaviour, the
-typing check and the tray icon.
+Windows and macOS. Always-on-top, the typing check, the tray icon and the
+single-instance guard each have a small platform-specific branch in cat.py;
+everything else is shared. After changing the art, run
+    python tools/make_icons.py
+to regenerate cat.ico, cat.icns and splash.png.

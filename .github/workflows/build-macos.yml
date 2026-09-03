@@ -1,0 +1,82 @@
+name: Build macOS app
+
+# Same triggers as the Windows build, so one tag push publishes both files
+# on the same release.
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    runs-on: macos-latest   # Apple Silicon; the .app is arm64-only
+
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PySide6 and PyInstaller
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install PySide6 pyinstaller
+
+      # No --splash here: PyInstaller's splash screen is Windows/Linux only
+      # and the build fails on macOS if you ask for it.
+      - name: Build Desktop Cat.app
+        run: >
+          python -m PyInstaller --noconfirm --windowed
+          --name "Desktop Cat" --icon cat.icns
+          --osx-bundle-identifier com.rigvedrs.desktopcat
+          --exclude-module PySide6.QtQml
+          --exclude-module PySide6.QtQuick
+          --exclude-module PySide6.QtWebEngineCore
+          --exclude-module PySide6.QtMultimedia
+          --exclude-module PySide6.Qt3DCore
+          --exclude-module PySide6.QtCharts
+          --exclude-module PySide6.QtDataVisualization
+          cat.py
+
+      # A pet has no Dock icon or menu bar; it lives in the menu-bar tray.
+      # Editing Info.plist breaks PyInstaller's ad-hoc signature, so re-sign.
+      - name: Hide from the Dock and re-sign
+        run: |
+          plutil -replace LSUIElement -bool true "dist/Desktop Cat.app/Contents/Info.plist"
+          codesign --force --deep --sign - "dist/Desktop Cat.app"
+
+      - name: Make the dmg
+        run: |
+          mkdir staging
+          cp -R "dist/Desktop Cat.app" staging/
+          ln -s /Applications staging/Applications
+          hdiutil create -volname "Desktop Cat" -srcfolder staging -ov -format UDZO DesktopCat-macos.dmg
+          ls -lh DesktopCat-macos.dmg
+
+      - name: Upload the dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: DesktopCat-macos
+          path: DesktopCat-macos.dmg
+          if-no-files-found: error
+
+      - name: Publish a download link (only when a tag is pushed)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: DesktopCat-macos.dmg
+          append_body: true
+          body: |
+            Mac (Apple Silicon): download DesktopCat-macos.dmg, open it, drag
+            Desktop Cat into Applications.
+
+            The first time, macOS will say it can't verify the app. Open
+            System Settings > Privacy & Security, scroll down, and click
+            "Open Anyway". Once only. Full steps are in
+            SEND-THIS-WITH-THE-MAC-FILE.txt.

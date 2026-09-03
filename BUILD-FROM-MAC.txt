@@ -1,33 +1,34 @@
-BUILDING THE WINDOWS EXE FROM YOUR MAC
-======================================
+BUILDING THE WINDOWS EXE AND THE MAC APP FROM YOUR MAC
+======================================================
 
 PyInstaller can't cross-compile: a Windows .exe has to be produced on
-Windows. You don't need a Windows machine though. GitHub will lend you one
-for a few minutes, for free, and hand you back the finished file.
+Windows, and a Mac .app on a Mac. You don't need a Windows machine though.
+GitHub will lend you one for a few minutes, for free, and hand you back
+the finished file -- and it builds the Mac app at the same time.
 
 Ignore build.bat entirely -- that was for a Windows laptop. This replaces it.
 
 
 -----------------------------------------------------------------------
-PART 1 -- SEE THE CAT ON YOUR MAC FIRST (2 minutes, optional)
+PART 1 -- RUN THE CAT ON YOUR MAC (2 minutes)
 -----------------------------------------------------------------------
 
-Worth doing before you build, so you're not waiting on a build to notice
-you want the eyes a shade different.
-
     cd path/to/DesktopCat
-    python3 -m venv .venv
-    source .venv/bin/activate
+    conda activate yolo          # or any env that isn't base
     pip install PySide6
-    python3 cat.py
+    python cat.py
 
 The cat appears bottom-right. Drag it, hover to pet it, right-click for
-the menu. Everything works except reacting to your typing, because that
-uses a Windows-only key check -- so on the Mac the menu grows an extra
-item, "Preview typing animation", to show you the paws tapping.
+the menu. Typing in any app makes the paws tap -- no permission prompt,
+because it only asks macOS how long ago the last key went down. Its eyes
+follow your cursor. It's on every desktop.
 
-Quit via right-click > Quit. This is only a preview; the thing you ship is
-built in part 2.
+Tests:            python -m pytest tests -q
+After art changes: python tools/make_icons.py   (rewrites cat.ico,
+                   cat.icns and splash.png -- commit them)
+
+Quit via right-click > Quit. Settings live in
+~/Library/Application Support/DesktopCat/.
 
 
 -----------------------------------------------------------------------
@@ -45,8 +46,10 @@ PART 2 -- BUILD THE EXE
 
        cat.py
        cat.ico
+       cat.icns
        splash.png
        .github/workflows/build-windows.yml
+       .github/workflows/build-macos.yml
 
    The .github folder is hidden in Finder. Press Cmd+Shift+. to show it,
    or just use the terminal. If you drag files into GitHub's web uploader
@@ -63,11 +66,13 @@ PART 2 -- BUILD THE EXE
 
 3. On GitHub, open the Actions tab.
    Click "Build Windows exe" on the left, then "Run workflow" on the right.
+   Do the same for "Build macOS app".
 
 4. Wait three to five minutes. Green tick means done.
 
-5. Scroll to the bottom of the finished run. Under "Artifacts" there's
-   DesktopCat-windows. Download it -- it's a zip containing DesktopCat.exe.
+5. Scroll to the bottom of each finished run. Under "Artifacts" there's
+   DesktopCat-windows (a zip containing DesktopCat.exe) and, on the other
+   run, DesktopCat-macos (a zip containing DesktopCat-macos.dmg).
 
 That exe is the whole app. Send it to anyone with a Windows laptop.
 
@@ -84,9 +89,10 @@ as the repo is public):
     git tag v1.0
     git push origin v1.0
 
-The same build runs, and a few minutes later github.com/YOU/desktop-cat/releases
-has a direct DesktopCat.exe link. Send that link plus the contents of
-SEND-THIS-WITH-THE-FILE.txt and you're done.
+Both builds run, and a few minutes later github.com/YOU/desktop-cat/releases
+has direct DesktopCat.exe and DesktopCat-macos.dmg links. Send the link plus
+SEND-THIS-WITH-THE-FILE.txt (Windows) or SEND-THIS-WITH-THE-MAC-FILE.txt
+(Mac) and you're done.
 
 For later versions, bump the tag: v1.1, v1.2, and so on.
 
